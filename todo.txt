@@ -1,0 +1,19 @@
+- create board type
+- load board from text file
+- methods for numbers in same row, column and square
+- structuring
+- logging of intermediate steps
+- download more boards from the web
+- implement more advanced solving methods
+
+
+steps
+create board
+generate candidates
+while no new discoveries:
+    check sole candidate (n*n)
+    - if new: update candidates and continue
+    check unique candidates (2*n*n):
+      - generate positions for rows, columns and squares (n*n * 3)
+      - check unique (n*n)
+        - if new: update candidates and continue

@@ -116,5 +116,4 @@ fabric.properties
 
 # End of https://www.gitignore.io/api/haskell,intellij
 
-haskell-sudoku.cabal
 *~

@@ -71,7 +71,7 @@ extra-deps:
 
 ghc-options:
   # All packages
-  "$locals": -Wall
+  "$locals": -Werror # TODO change to -Wall to fail on warnings too
   "$targets": -Werror
   "$everything": -O2
   haskell-sudoku: -fprof-auto -fprof-cafs

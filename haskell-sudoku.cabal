@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c893f7eb5037e50b935eadf2739d65e108e8f35eef3610a2c7da8b4adcfeefd4
+-- hash: f2f73492e277f5be87d865a9af453991b120ca4296a69d4d87e9a89aa82d7758
 
 name:           haskell-sudoku
 version:        0.1.0.0
@@ -27,7 +27,9 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      Board
+      Solve
+      Utils
   other-modules:
       Paths_haskell_sudoku
   hs-source-dirs:
@@ -36,6 +38,7 @@ library
       HUnit
     , base >=4.7 && <5
     , containers
+    , extra
     , matrix
     , vector
   default-language: Haskell2010
@@ -51,6 +54,7 @@ executable haskell-sudoku-exe
       HUnit
     , base >=4.7 && <5
     , containers
+    , extra
     , haskell-sudoku
     , matrix
     , vector
@@ -60,6 +64,7 @@ test-suite haskell-sudoku-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      BoardTest
       Paths_haskell_sudoku
   hs-source-dirs:
       test
@@ -68,6 +73,7 @@ test-suite haskell-sudoku-test
       HUnit
     , base >=4.7 && <5
     , containers
+    , extra
     , haskell-sudoku
     , matrix
     , vector

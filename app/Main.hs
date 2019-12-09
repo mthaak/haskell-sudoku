@@ -1,6 +1,10 @@
 module Main where
 
-import Lib
+import Board
+import Solve
 
 main :: IO ()
-main = solveSudoku
+main = fmap (showPrettyBoard . solve) loadBoard >>= putStrLn
+
+loadBoard :: IO Board
+loadBoard = fmap readBoard (readFile "data/board.txt")

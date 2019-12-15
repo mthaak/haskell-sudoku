@@ -8,26 +8,39 @@ import           Data.IntSet as IntSet hiding (filter, foldl, map)
 import           Data.Matrix (Matrix, matrix)
 import           Data.Matrix as Matrix hiding (flatten, trace)
 import           Debug.Trace (trace, traceShow, traceShowId)
+import           Control.Monad.Writer
+import           Data.List (nub, nubBy)
 
 -- 9x9 cells with sets of candidate numbers
 type Candidates = Matrix IntSet
 
 -- Tries to solve the board
-solve :: Board -> Board
-solve board = solveLoop board candidates 100
+solve :: Board -> Writer [String] Board
+solve board = do
+  tell ["Initial board: ", showBoard board]
+  tell ["Initial candidates: ", showCandidates candidates]
+  solveLoop board candidates 100
   where
-    candidates = traceShowId (generateCandidates board)
+    candidates = generateCandidates board
 
-solveLoop :: Board -> Candidates -> Int -> Board
-solveLoop board _ 0 = board -- stop at 0 iterationsLeft
-solveLoop board candidates iterationsLeft =
-  if numKnown newBoard == 81
-    then newBoard
-    else solveLoop newBoard newCandidates (iterationsLeft - 1)
+solveLoop :: Board -> Candidates -> Int -> Writer [String] Board
+solveLoop board _ 0 = return board -- stop at 0 iterationsLeft
+solveLoop board candidates iterationsLeft = do
+  tell [replicate 120 '-']
+  tell ["Iterations left: " ++ show iterationsLeft]
+  tell ["Found numbers sole: ", show newNumbersSole]
+  tell ["Found numbers unique: ", show newNumbersUnique]
+  tell ["Updated board: ", showBoard updatedBoard]
+  tell ["Updated candidates: ", showCandidates candidates]
+  if (numKnown updatedBoard == 81) || (newNumbers == [])
+    then return updatedBoard
+    else solveLoop updatedBoard updatedCandidates (iterationsLeft - 1)
   where
-    newNumbers = solveUniqueCandidate candidates
-    newBoard = updateBoard newNumbers board
-    newCandidates = updateCandidates newNumbers candidates
+    newNumbersSole = solveSoleCandidate candidates
+    newNumbersUnique = solveUniqueCandidate candidates
+    newNumbers = newNumbersSole ++ newNumbersUnique
+    updatedBoard = updateBoard newNumbers board
+    updatedCandidates = updateCandidates newNumbers candidates
 
 -- Generates the candidates from the given board
 generateCandidates :: Board -> Candidates
@@ -41,16 +54,15 @@ generateCandidates board = foldl h initialCandidates present
 
 -- Looks for cells with only one candidate
 solveSoleCandidate :: Candidates -> [(Int, Position)]
-solveSoleCandidate candidates = soleCandidates
+solveSoleCandidate candidates = [(intSetHead (getElem i j candidates), (i, j)) |
+ (i, j) <- positions, IntSet.size (getElem i j candidates) == 1]
   where
-    elements = [(i, j) | i <- [1 .. 9], j <- [1 .. 9]]
-    soleCandidates =
-      [(intSetHead (getElem i j candidates), (i, j)) | (i, j) <- elements, IntSet.size (getElem i j candidates) == 1]
+    positions = [(i, j) | i <- [1 .. 9], j <- [1 .. 9]]
 
 solveUniqueCandidate :: Candidates -> [(Int, Position)]
-solveUniqueCandidate candidates = uniqueCandidates rowsPos
+solveUniqueCandidate candidates = nub (uniqueCandidates rowsPos
   ++ uniqueCandidates columnsPos
-  ++ uniqueCandidates squaresPos
+  ++ uniqueCandidates squaresPos)
   where
     uniqueCandidates blocks = concat $ map (lookForUniqueCandidates . withCandidates) blocks
     withCandidates block = [(getElem i j candidates, (i, j)) | (i, j) <- block]
@@ -71,11 +83,18 @@ updateCandidates newNumbers candidates = foldl f candidates newNumbers
 
 -- Removes all alternate candidates of Int around Pos
 removeNeighbourCandidates :: Int -> Position -> Candidates -> Candidates
-removeNeighbourCandidates x pos candidates = foldl remove candidates neighbours
+removeNeighbourCandidates x pos candidates = removeAllCandidates pos neighbourCandidatesRemoved
   where
-    neighbours = pos : getNeighbours pos -- include the position itself
-    remove acc (i, j) = removeCandidate x (i, j) acc
+    neighbourCandidatesRemoved = foldl (\acc pos -> removeCandidate x pos acc) candidates (getNeighbours pos)
 
 -- Removes candidate Int at Position
 removeCandidate :: Int -> Position -> Candidates -> Candidates
 removeCandidate candidate pos candidates = mapElemMatrix (IntSet.delete candidate) pos candidates
+
+-- Removes all candidates at Position
+removeAllCandidates :: Position -> Candidates -> Candidates
+removeAllCandidates pos candidates = Matrix.setElem IntSet.empty pos candidates
+
+-- Shows candidates as a matrix
+showCandidates :: Candidates -> String
+showCandidates candidates = show (fmap IntSet.toList candidates)

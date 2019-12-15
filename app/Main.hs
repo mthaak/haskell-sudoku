@@ -2,9 +2,15 @@ module Main where
 
 import Board
 import Solve
+import Control.Monad.Writer (runWriter)
 
 main :: IO ()
-main = fmap (showPrettyBoard . solve) loadBoard >>= putStrLn
+main = do
+  board <- loadBoard
+  let (finalBoard, logs) =  runWriter (solve board)
+  mapM_ putStrLn logs
+  putStrLn "Final board: "
+  putStrLn (showBoard finalBoard)
 
 loadBoard :: IO Board
 loadBoard = fmap readBoard (readFile "data/board.txt")

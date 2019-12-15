@@ -11,7 +11,7 @@ module Board
   , columnNeighbours
   , squareNeighbours
   , readBoard
-  , showPrettyBoard
+  , showBoard
   ) where
 
 import           Utils (removeLineEndings, boolToInt)
@@ -61,10 +61,10 @@ columnNeighbours (i, j) = [(x, j) | x <- [1 .. 9], x /= i]
 
 -- Neighbours in same square
 squareNeighbours :: Position -> [Position]
-squareNeighbours (i, j) = [(x, y) | x <- [xStart .. xStart + 2], y <- [yStart .. yStart + 2], (x, y) /= (i, j)]
+squareNeighbours (i, j) = [(x, y) | x <- [xs .. xs + 2], y <- [ys .. ys + 2], (x, y) /= (i, j)]
   where
-    xStart = ((i - 1) `div` 3) * 3 + 1
-    yStart = ((j - 1) `div` 3) * 3 + 1
+    xs = ((i - 1) `div` 3) * 3 + 1
+    ys = ((j - 1) `div` 3) * 3 + 1
 
 -- Row, column and square neighbours
 getNeighbours :: Position -> [Position]
@@ -82,5 +82,5 @@ toDigit :: Int -> Char
 toDigit 0 = '_'
 toDigit x = intToDigit x
 
-showPrettyBoard :: Board -> String
-showPrettyBoard = Matrix.prettyMatrix
+showBoard :: Board -> String
+showBoard = Matrix.prettyMatrix

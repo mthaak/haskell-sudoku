@@ -1,13 +1,15 @@
-- create board type
-- load board from text file
-- methods for numbers in same row, column and square
-- structuring
-- logging of intermediate steps
+x create board type
+x load board from text file
+x methods for numbers in same row, column and square
+x structuring
+x logging of intermediate steps
 - download more boards from the web
-- implement more advanced solving methods
+- implement candidate removal methods
+- add more tests
+- package as application?
 
 
-steps
+STEPS
 create board
 generate candidates
 while no new discoveries:

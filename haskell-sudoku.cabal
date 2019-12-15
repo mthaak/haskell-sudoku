@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f2f73492e277f5be87d865a9af453991b120ca4296a69d4d87e9a89aa82d7758
+-- hash: 33420206f06ea48f38240f902f4de3714e6c5584ca21e87e8129d94548bbd2fd
 
 name:           haskell-sudoku
 version:        0.1.0.0
@@ -40,6 +40,7 @@ library
     , containers
     , extra
     , matrix
+    , mtl
     , vector
   default-language: Haskell2010
 
@@ -57,6 +58,7 @@ executable haskell-sudoku-exe
     , extra
     , haskell-sudoku
     , matrix
+    , mtl
     , vector
   default-language: Haskell2010
 
@@ -76,5 +78,6 @@ test-suite haskell-sudoku-test
     , extra
     , haskell-sudoku
     , matrix
+    , mtl
     , vector
   default-language: Haskell2010

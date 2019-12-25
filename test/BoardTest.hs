@@ -5,8 +5,6 @@ module BoardTest
 import           Board
 import           Test.HUnit
 
-testRowPows :: Test
-
 testRowNeighbours :: Test
 testRowNeighbours =
   TestCase
@@ -32,9 +30,10 @@ testSquareNeighbours =
        (squareNeighbours (6, 5)))
 
 boardTests :: Test
-boardTests =
-  TestList
+boardTests = TestLabel "BoardTest"
+  (TestList
     [ TestLabel "testRowNeighbours" testRowNeighbours
     , TestLabel "testColumnNeighbours" testColumnNeighbours
     , TestLabel "testSquareNeighbours" testSquareNeighbours
     ]
+  )

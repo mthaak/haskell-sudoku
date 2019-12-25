@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 33420206f06ea48f38240f902f4de3714e6c5584ca21e87e8129d94548bbd2fd
+-- hash: 44100df07f159136205b7cbd826bd2d49d9c5ab90dc4b90278bf973fbe5a6541
 
 name:           haskell-sudoku
 version:        0.1.0.0
@@ -67,6 +67,8 @@ test-suite haskell-sudoku-test
   main-is: Spec.hs
   other-modules:
       BoardTest
+      SolveTest
+      TestUtils
       Paths_haskell_sudoku
   hs-source-dirs:
       test

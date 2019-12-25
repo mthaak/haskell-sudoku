@@ -13,4 +13,4 @@ main = do
   putStrLn (showBoard finalBoard)
 
 loadBoard :: IO Board
-loadBoard = fmap readBoard (readFile "data/board.txt")
+loadBoard = fmap readBoard (readFile "data/board_hardest.txt")

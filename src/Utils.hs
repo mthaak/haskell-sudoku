@@ -23,7 +23,7 @@ removeLineEndings :: String -> String
 removeLineEndings = filter (/= '\n')
 
 -- Keeps only the elements for which (a -> b) returns a unique value (appearing only once)
-filterUniqueEqBy :: Ord b => Show a => Show b => (a -> b) -> [a] -> [a]
+filterUniqueEqBy :: Ord b => (a -> b) -> [a] -> [a]
 filterUniqueEqBy f = map head . filter (\g -> length g == 1) . groupBy eq . sortBy (comparing f)
   where eq = (==) `on` f
 

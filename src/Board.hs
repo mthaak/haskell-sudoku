@@ -2,6 +2,7 @@ module Board
   ( Board
   , Position
   , numKnown
+  , knownPos
   , updateBoard
   , rowsPos
   , columnsPos
@@ -29,6 +30,10 @@ type Position = (Int, Int)
 numKnown :: Board -> Int
 numKnown = length . filter (/= 0) . Matrix.toList
 
+-- Returns the known numbers with their positions
+knownPos :: Board -> [(Int, Position)]
+knownPos = filter ((0 /=) . fst) . Matrix.toList . Matrix.mapPos (\(r,c) x -> (x, (r, c)))
+
 -- Updates the board with newly found numbers
 updateBoard :: [(Int, Position)] -> Board -> Board
 updateBoard newNumbers board = foldl f board newNumbers
@@ -41,30 +46,30 @@ updateCell = Matrix.setElem
 
 -- Positions of elements by row
 rowsPos :: [[Position]]
-rowsPos = [[(i, j) | j <- [1 .. 9]] | i <- [1 .. 9]]
+rowsPos = [[(r, c) | c <- [1 .. 9]] | r <- [1 .. 9]]
 
 -- Positions of elements by column
 columnsPos :: [[Position]]
-columnsPos = [[(i, j) | i <- [1 .. 9]] | j <- [1 .. 9]]
+columnsPos = [[(r, c) | r <- [1 .. 9]] | c <- [1 .. 9]]
 
 -- Positions of elements by squares
 squaresPos :: [[Position]]
-squaresPos = [[(i, j) | i <- [is .. is + 2], j <- [js .. js + 2]]   | is <- [1, 4, 7], js <- [1, 4, 7]]
+squaresPos = [[(r, c) | r <- [rs .. rs + 2], c <- [cs .. cs + 2]] | rs <- [1, 4, 7], cs <- [1, 4, 7]]
 
 -- Neighbours in same row
 rowNeighbours :: Position -> [Position]
-rowNeighbours (i, j) = [(i, x) | x <- [1 .. 9], x /= j]
+rowNeighbours (i, j) = [(i, c) | c <- [1 .. 9], c /= j]
 
 -- Neighbours in same column
 columnNeighbours :: Position -> [Position]
-columnNeighbours (i, j) = [(x, j) | x <- [1 .. 9], x /= i]
+columnNeighbours (i, j) = [(r, j) | r <- [1 .. 9], r /= i]
 
 -- Neighbours in same square
 squareNeighbours :: Position -> [Position]
-squareNeighbours (i, j) = [(x, y) | x <- [xs .. xs + 2], y <- [ys .. ys + 2], (x, y) /= (i, j)]
+squareNeighbours (i, j) = [(r, c) | r <- [rs .. rs + 2], c <- [cs .. cs + 2], (r, c) /= (i, j)]
   where
-    xs = ((i - 1) `div` 3) * 3 + 1
-    ys = ((j - 1) `div` 3) * 3 + 1
+    rs = ((i - 1) `div` 3) * 3 + 1
+    cs = ((j - 1) `div` 3) * 3 + 1
 
 -- Row, column and square neighbours
 getNeighbours :: Position -> [Position]
@@ -75,11 +80,11 @@ readBoard :: String -> Board
 readBoard = fmap toInt . Matrix.fromList 9 9 . removeLineEndings
 
 toInt :: Char -> Int
-toInt '_' = 0
+toInt '.' = 0
 toInt x   = digitToInt x
 
 toDigit :: Int -> Char
-toDigit 0 = '_'
+toDigit 0 = '.'
 toDigit x = intToDigit x
 
 showBoard :: Board -> String

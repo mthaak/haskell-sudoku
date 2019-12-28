@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 44100df07f159136205b7cbd826bd2d49d9c5ab90dc4b90278bf973fbe5a6541
+-- hash: b49d1b7b68a2731fa205bc7a9aa1e5e48b9c71d3827b01dc9229b4dbfe5f2863
 
 name:           haskell-sudoku
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       Board
+      Candidates
       Solve
       Utils
   other-modules:

@@ -5,6 +5,7 @@ module Utils
   , mapElemMatrix
   , mapElemVector
   , boolToInt
+  , tuplify3
   ) where
 
 import           Data.IntSet (IntSet, elems)
@@ -45,3 +46,6 @@ mapElemVector f i vector = vector // [(i, new)]
 boolToInt :: Bool -> Int
 boolToInt True  = 1
 boolToInt False = 0
+
+tuplify3 :: [a] -> (a,a,a)
+tuplify3 [x,y,z] = (x,y,z)

@@ -7,6 +7,7 @@ module Board
   , rowsPos
   , columnsPos
   , squaresPos
+  , inSameSquare
   , getNeighbours
   , rowNeighbours
   , columnNeighbours
@@ -55,6 +56,11 @@ columnsPos = [[(r, c) | r <- [1 .. 9]] | c <- [1 .. 9]]
 -- Positions of elements by squares
 squaresPos :: [[Position]]
 squaresPos = [[(r, c) | r <- [rs .. rs + 2], c <- [cs .. cs + 2]] | rs <- [1, 4, 7], cs <- [1, 4, 7]]
+
+-- Checks whether the given positions are in the same square
+inSameSquare :: Position -> Position -> Bool
+inSameSquare (r1, c1) (r2, c2) = floor3 r1 == floor3 r2 && floor3 c1 == floor3 c2
+  where floor3 n = ((n - 1) `div` 3) * 3 + 1
 
 -- Neighbours in same row
 rowNeighbours :: Position -> [Position]

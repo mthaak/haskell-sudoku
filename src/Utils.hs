@@ -6,14 +6,20 @@ module Utils
   , mapElemVector
   , boolToInt
   , tuplify3
+  , intSetPowerset
+  , intSetIntersection
   ) where
 
+import           Data.Set (Set)
+import           qualified Data.Set as Set
 import           Data.IntSet (IntSet, elems)
+import           qualified Data.IntSet as IntSet
 import           Data.Matrix (Matrix, getElem, setElem)
 import           Data.Vector (Vector, (!), Vector, (//))
 import           Data.Ord (comparing)
 import           Data.Function (on)
 import           Data.List.Extra (groupBy, sortBy)
+import           Control.Monad (filterM)
 
 -- Returns the first element of an IntSet
 intSetHead :: IntSet -> Int
@@ -49,3 +55,18 @@ boolToInt False = 0
 
 tuplify3 :: [a] -> (a,a,a)
 tuplify3 [x,y,z] = (x,y,z)
+
+intSetPowerset :: IntSet -> [IntSet]
+intSetPowerset = map setOfIntToIntSet . Set.toList . Set.powerSet . intSetToSetOfInt
+
+intSetIntersection :: IntSet -> IntSet -> IntSet
+intSetIntersection a b = setOfIntToIntSet $ Set.intersection (intSetToSetOfInt a) (intSetToSetOfInt b)
+
+--powerset :: [a] -> [[a]]
+--powerset = filterM (const [True, False])
+
+intSetToSetOfInt :: IntSet -> Set Int
+intSetToSetOfInt = Set.fromList . IntSet.toList
+
+setOfIntToIntSet :: Set Int -> IntSet
+setOfIntToIntSet = IntSet.fromList . Set.toList

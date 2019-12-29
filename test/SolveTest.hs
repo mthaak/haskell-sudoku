@@ -104,6 +104,22 @@ testSquareSquareInteractionsColumn =
       , (IntSet.fromList [8], (8, 4))
       , (IntSet.fromList [8], (8, 5))]
 
+testEliminateCandidatesByNakedSubsets :: Test
+testEliminateCandidatesByNakedSubsets =
+  TestCase
+    (assertEqual
+      "for createCandidates ..."
+      [(4, (2, 1)), (7, (2, 1)), (7, (4, 1)), (4, (6, 1))]
+      (eliminateCandidatesByNakedSubsets candidates))
+  where
+    candidates = createCandidates [
+        (IntSet.fromList [4, 7], (1, 1))
+      , (IntSet.fromList [1, 4, 7], (2, 1))
+      , (IntSet.fromList [2, 6, 7], (4, 1))
+      , (IntSet.fromList [4, 7], (5, 1))
+      , (IntSet.fromList [2, 4], (6, 1))]
+
+
 testSolveEasy :: Test
 testSolveEasy =
   TestCase ( do
@@ -127,14 +143,15 @@ testSolveHard =
 
 solveTests :: Test
 solveTests = TestLabel "SolveTest"
-  (TestList
-    [ TestLabel "testSearchSoleCandidates" testSearchSoleCandidates
-    , TestLabel "testSearchUniqueCandidates" testSearchUniqueCandidates
-    , TestLabel "testSquareRowInteractions" testSquareRowInteractions
-    , TestLabel "testSquareColumnInteractions" testSquareColumnInteractions
-    , TestLabel "testSquareSquareInteractionsRow" testSquareSquareInteractionsRow
-    , TestLabel "testSquareSquareInteractionsColumn" testSquareSquareInteractionsColumn
-    , TestLabel "testSolveEasy" testSolveEasy
-    , TestLabel "testSolveHard" testSolveHard
+  (TestList [
+--      TestLabel "testSearchSoleCandidates" testSearchSoleCandidates
+--    , TestLabel "testSearchUniqueCandidates" testSearchUniqueCandidates
+--    , TestLabel "testSquareRowInteractions" testSquareRowInteractions
+--    , TestLabel "testSquareColumnInteractions" testSquareColumnInteractions
+--    , TestLabel "testSquareSquareInteractionsRow" testSquareSquareInteractionsRow
+--    , TestLabel "testSquareSquareInteractionsColumn" testSquareSquareInteractionsColumn
+    TestLabel "testEliminateCandidatesByNakedSubsets" testEliminateCandidatesByNakedSubsets
+--    , TestLabel "testSolveEasy" testSolveEasy
+--    , TestLabel "testSolveHard" testSolveHard
     ]
   )

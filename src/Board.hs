@@ -18,8 +18,8 @@ module Board
 
 import           Utils (removeLineEndings, boolToInt)
 import           Data.Char
-import           Data.Matrix as Matrix
-import           Data.Vector (Vector)
+import           Data.Matrix (Matrix)
+import           qualified Data.Matrix as Matrix
 
 -- 9x9 matrix of numbers
 type Board = Matrix Int

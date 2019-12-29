@@ -5,6 +5,7 @@ module Candidates
   , swapRowsColumns
   , joinCandidates
   , joinCandidateSets
+  , flatten
   , removeCandidates
   , createCandidates
   , candidateIsPresent
@@ -15,12 +16,11 @@ module Candidates
   ) where
 import           Board
 import           Utils
-import           Data.Tuple as Tuple
-import           Data.List as List
+import           qualified Data.Tuple as Tuple
 import           Data.IntSet (IntSet)
-import           Data.IntSet as IntSet hiding (filter, foldl, map)
-import           Data.Matrix (Matrix, matrix)
-import           Data.Matrix as Matrix hiding (flatten, trace)
+import           qualified Data.IntSet as IntSet
+import           Data.Matrix (Matrix, matrix, getElem, setElem)
+import           qualified Data.Matrix as Matrix
 import           Debug.Trace (trace, traceShow, traceShowId)
 import           Data.Ord (comparing)
 import           Data.List (nub, nubBy, groupBy, sortBy)
@@ -47,7 +47,7 @@ joinCandidateSets candidates positions = [(getElem i j candidates, (i, j)) | (i,
 
 flatten :: [(IntSet, Position)] -> [(Int, Position)]
 flatten list = concat (map flat list)
-  where flat (set, pos) = map (\n -> (n, pos)) (elems set)
+  where flat (set, pos) = map (\n -> (n, pos)) (IntSet.elems set)
 
 -- Updates the candidates with newly found numbers
 updateCandidates :: [(Int, Position)] -> Candidates -> Candidates
@@ -72,7 +72,7 @@ createCandidates toSet = foldl f emptyCandidates toSet
 
 -- Sets the candidate set at position
 setCandidatesAtPos :: IntSet -> Position -> Candidates -> Candidates
-setCandidatesAtPos candidateSet pos candidates = Matrix.setElem candidateSet pos candidates
+setCandidatesAtPos candidateSet pos candidates = setElem candidateSet pos candidates
 
 -- Adds multiple candidates
 addCandidates :: [(Int, Position)] -> Candidates  -> Candidates

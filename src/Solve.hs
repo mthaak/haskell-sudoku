@@ -6,16 +6,18 @@ module Solve
   , squareColumnInteractions
   , squareSquareInteractionsRow
   , squareSquareInteractionsColumn
+  , eliminateCandidatesByNakedSubsets
   ) where
 import           Board
 import           Candidates
 import           Utils
-import           Data.Tuple as Tuple
-import           Data.List as List
+import           qualified Data.Tuple as Tuple
+import           qualified Data.List as List
+import           Data.Set (powerSet, intersection)
 import           Data.IntSet (IntSet)
-import           Data.IntSet as IntSet hiding (filter, foldl, map)
-import           Data.Matrix (Matrix, matrix)
-import           Data.Matrix as Matrix hiding (flatten, trace)
+import           qualified Data.IntSet as IntSet
+import           Data.Matrix (Matrix, matrix, getElem)
+import           qualified Data.Matrix as Matrix
 import           Debug.Trace (trace, traceShow, traceShowId)
 import           Data.Ord (comparing)
 import           Control.Monad.Writer
@@ -145,3 +147,22 @@ squareSquareInteractionsForNum num sq1 sq2 sq3
 -- Looks for candidates that can be eliminated due to square-square interactions (column-wise)
 squareSquareInteractionsColumn :: Candidates -> [(Int, Position)]
 squareSquareInteractionsColumn = swapRowsColumns . squareSquareInteractionsRow . Matrix.transpose
+
+eliminateCandidatesByNakedSubsets :: Candidates -> [(Int, Position)]
+eliminateCandidatesByNakedSubsets candidates = concatMap eliminateCandidatesByNakedSubsetsForBlock blocksWithCandidates
+  where
+    blocks = rowsPos ++ columnsPos ++ squaresPos
+    blocksWithCandidates = map (joinCandidateSets candidates) blocks
+
+eliminateCandidatesByNakedSubsetsForBlock :: [(IntSet, Position)] -> [(Int, Position)]
+eliminateCandidatesByNakedSubsetsForBlock block = concatMap (removable block) commonSubsets
+  where
+    commonSubsets = (map extractSubset . filterGroup . groupBySubset) block
+    groupBySubset = groupBy (\a b -> (fst a) == (fst b)) . sortBy (comparing fst)
+    filterGroup = filter (\grp -> length grp == IntSet.size (extractSubset grp))
+    extractSubset = (fst . head)
+    removable block subset = concatMap (\(numSet, pos) ->
+        if numSet == subset
+          then []
+          else flatten [(intSetIntersection numSet subset, pos)]
+      ) block

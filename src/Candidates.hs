@@ -3,6 +3,8 @@ module Candidates
   , generateCandidates
   , updateCandidates
   , swapRowsColumns
+  , getCandidate
+  , getCandidates
   , joinCandidates
   , joinCandidateSets
   , flatten
@@ -11,6 +13,7 @@ module Candidates
   , candidateIsPresent
   , showCandidates
   , xNum
+  , xNumSet
   , xRow
   , xCol
   ) where
@@ -21,9 +24,6 @@ import           Data.IntSet (IntSet)
 import           qualified Data.IntSet as IntSet
 import           Data.Matrix (Matrix, matrix, getElem, setElem)
 import           qualified Data.Matrix as Matrix
-import           Debug.Trace (trace, traceShow, traceShowId)
-import           Data.Ord (comparing)
-import           Data.List (nub, nubBy, groupBy, sortBy)
 
 -- 9x9 cells with sets of candidate numbers
 type Candidates = Matrix IntSet
@@ -34,8 +34,17 @@ generateCandidates board = updateCandidates (knownPos board) initialCandidates
   where
     initialCandidates = matrix 9 9 $ \_ -> IntSet.fromList [1 .. 9] -- start from all candidates
 
+-- Swaps row and column indices
 swapRowsColumns :: [(a, Position)] -> [(a, Position)]
 swapRowsColumns = map (\(a, pos) -> (a, Tuple.swap pos))
+
+-- Get the candidate set at position
+getCandidate :: Candidates -> Position -> IntSet
+getCandidate candidates (r, c) = getElem r c candidates
+
+-- Gets candidate sets for multiple positions
+getCandidates :: Candidates -> [Position] -> [(IntSet, Position)]
+getCandidates candidates positions = map (\pos -> (getCandidate candidates pos, pos)) positions
 
 -- Add the individual candidates to the given positions
 joinCandidates :: Candidates -> [Position] -> [(Int, Position)]
@@ -45,9 +54,10 @@ joinCandidates candidates positions = flatten $ joinCandidateSets candidates pos
 joinCandidateSets :: Candidates -> [Position] -> [(IntSet, Position)]
 joinCandidateSets candidates positions = [(getElem i j candidates, (i, j)) | (i, j) <- positions]
 
+-- Flattens positions with multiple candidates to one candidate per position
 flatten :: [(IntSet, Position)] -> [(Int, Position)]
-flatten list = concat (map flat list)
-  where flat (set, pos) = map (\n -> (n, pos)) (IntSet.elems set)
+flatten list = concatMap flat list
+  where flat (intSet, pos) = map (\n -> (n, pos)) (IntSet.elems intSet)
 
 -- Updates the candidates with newly found numbers
 updateCandidates :: [(Int, Position)] -> Candidates -> Candidates
@@ -107,6 +117,10 @@ showCandidates candidates = show (fmap IntSet.toList candidates)
 -- Extract number
 xNum :: (Int, Position) -> Int
 xNum = fst
+
+-- Extract number set
+xNumSet :: (IntSet, Position) -> IntSet
+xNumSet = fst
 
 -- Extract row
 xRow :: (a, Position) -> Int

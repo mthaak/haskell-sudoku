@@ -3,10 +3,11 @@ x load board from text file
 x methods for numbers in same row, column and square
 x structuring
 x logging of intermediate steps
-- download more boards from the web
-- implement candidate removal methods
+x download more boards from the web
+x implement candidate removal methods
 - add more tests
 - package as application?
+- refactoring
 
 
 STEPS

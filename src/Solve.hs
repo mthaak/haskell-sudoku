@@ -7,13 +7,14 @@ module Solve
   , squareSquareInteractionsRow
   , squareSquareInteractionsColumn
   , eliminateCandidatesByNakedSubsets
+  , eliminateCandidatesByHiddenSubsets
   ) where
 import           Board
 import           Candidates
 import           Utils
+import           qualified Data.Set as Set
 import           qualified Data.Tuple as Tuple
 import           qualified Data.List as List
-import           Data.Set (powerSet, intersection)
 import           Data.IntSet (IntSet)
 import           qualified Data.IntSet as IntSet
 import           Data.Matrix (Matrix, matrix, getElem)
@@ -21,7 +22,7 @@ import           qualified Data.Matrix as Matrix
 import           Debug.Trace (trace, traceShow, traceShowId)
 import           Data.Ord (comparing)
 import           Control.Monad.Writer
-import           Data.List (nub, nubBy, groupBy, sortBy)
+import           Data.List (nub, nubBy, groupBy, sortBy, maximumBy)
 
 -- Tries to solve the board
 solve :: Board -> Writer [String] Board
@@ -97,6 +98,8 @@ candidateEliminators = [
   , ("squareColumnInteractions", squareColumnInteractions)
   , ("squareSquareInteractionsRow", squareSquareInteractionsRow)
   , ("squareSquareInteractionsColumn", squareSquareInteractionsColumn)
+  , ("eliminateCandidatesByNakedSubsets", eliminateCandidatesByNakedSubsets)
+  , ("eliminateCandidatesByHiddenSubsets", eliminateCandidatesByHiddenSubsets)
   ]
 
 -- TODO make more similar to squareSquareInteractions
@@ -164,5 +167,27 @@ eliminateCandidatesByNakedSubsetsForBlock block = concatMap (removable block) co
     removable block subset = concatMap (\(numSet, pos) ->
         if numSet == subset
           then []
-          else flatten [(intSetIntersection numSet subset, pos)]
+          else flatten [(IntSet.intersection numSet subset, pos)]
       ) block
+
+eliminateCandidatesByHiddenSubsets :: Candidates -> [(Int, Position)]
+eliminateCandidatesByHiddenSubsets candidates = nub $ concatMap f blocks
+  where
+    blocks = rowsPos ++ columnsPos ++ squaresPos
+    f block = concatMap (uncurry (g block)) (splitsMinSize 2 (Set.fromList [1..9]))
+    g block a b = h (toPos block (Set.toList a)) (toPos block (Set.toList b))
+    toPos block indices = map (\i -> block !! (i - 1)) indices
+    h a b = eliminateCandidatesByHiddenSubsetsInclExcl (getCandidates candidates a)
+                                                       (getCandidates candidates b)
+
+eliminateCandidatesByHiddenSubsetsInclExcl :: [(IntSet, Position)] -> [(IntSet, Position)] -> [(Int, Position)]
+eliminateCandidatesByHiddenSubsetsInclExcl cellsIncl cellsExcl
+  | (length uniqueSubsets) > 0 = removable
+  | otherwise = []
+  where
+    largestSubset = foldl1 IntSet.intersection (map xNumSet cellsIncl)
+    subsets = subsetsOfSize (length cellsIncl) largestSubset
+    isUnique subset = all (\(numSet, pos) -> IntSet.intersection subset numSet == IntSet.empty) cellsExcl
+    uniqueSubsets = filter isUnique subsets
+    largestUniqueSubset = maximumBy (comparing IntSet.size) uniqueSubsets
+    removable = flatten $ map (\(numSet, pos) -> (IntSet.difference numSet largestUniqueSubset, pos)) cellsIncl

@@ -119,6 +119,22 @@ testEliminateCandidatesByNakedSubsets =
       , (IntSet.fromList [4, 7], (5, 1))
       , (IntSet.fromList [2, 4], (6, 1))]
 
+testEliminateCandidatesByHiddenSubsets :: Test
+testEliminateCandidatesByHiddenSubsets =
+  TestCase
+    (assertEqual
+      "for createCandidates ..."
+      [(2, (5, 1)), (3, (5, 1)), (5, (5, 1)), (2, (6, 1)), (3, (6, 1)), (5, (6, 1))]
+      (eliminateCandidatesByHiddenSubsets candidates))
+  where
+    candidates = createCandidates [
+        (IntSet.fromList [2, 3], (4, 1))
+      , (IntSet.fromList [2, 3, 5, 6, 7], (5, 1))
+      , (IntSet.fromList [2, 3, 5, 6, 7], (6, 1))
+      , (IntSet.fromList [2, 9], (7, 1))
+      , (IntSet.fromList [2, 3, 5], (8, 1))
+      , (IntSet.fromList [2, 3, 9], (9, 1))]
+
 
 testSolveEasy :: Test
 testSolveEasy =
@@ -144,14 +160,15 @@ testSolveHard =
 solveTests :: Test
 solveTests = TestLabel "SolveTest"
   (TestList [
---      TestLabel "testSearchSoleCandidates" testSearchSoleCandidates
---    , TestLabel "testSearchUniqueCandidates" testSearchUniqueCandidates
---    , TestLabel "testSquareRowInteractions" testSquareRowInteractions
---    , TestLabel "testSquareColumnInteractions" testSquareColumnInteractions
---    , TestLabel "testSquareSquareInteractionsRow" testSquareSquareInteractionsRow
---    , TestLabel "testSquareSquareInteractionsColumn" testSquareSquareInteractionsColumn
-    TestLabel "testEliminateCandidatesByNakedSubsets" testEliminateCandidatesByNakedSubsets
---    , TestLabel "testSolveEasy" testSolveEasy
---    , TestLabel "testSolveHard" testSolveHard
+      TestLabel "testSearchSoleCandidates" testSearchSoleCandidates
+    , TestLabel "testSearchUniqueCandidates" testSearchUniqueCandidates
+    , TestLabel "testSquareRowInteractions" testSquareRowInteractions
+    , TestLabel "testSquareColumnInteractions" testSquareColumnInteractions
+    , TestLabel "testSquareSquareInteractionsRow" testSquareSquareInteractionsRow
+    , TestLabel "testSquareSquareInteractionsColumn" testSquareSquareInteractionsColumn
+    , TestLabel "testEliminateCandidatesByNakedSubsets" testEliminateCandidatesByNakedSubsets
+    , TestLabel "testEliminateCandidatesByHiddenSubsets" testEliminateCandidatesByHiddenSubsets
+    , TestLabel "testSolveEasy" testSolveEasy
+    , TestLabel "testSolveHard" testSolveHard
     ]
   )

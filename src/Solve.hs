@@ -92,6 +92,7 @@ runCandidateEliminators ((name, eliminator):other) candidates
  where removable = eliminator candidates
 
 -- Functions and their names for eliminating candidates
+-- Inspired on https://www.kristanix.com/sudokuepic/sudoku-solving-techniques.php
 candidateEliminators :: [(String, Candidates -> [(Int, Position)])]
 candidateEliminators = [
       ("squareRowInteractions", squareRowInteractions)

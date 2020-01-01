@@ -24,7 +24,7 @@ import           Data.Ord (comparing)
 import           Control.Monad.Writer
 import           Data.List (nub, nubBy, groupBy, sortBy, maximumBy)
 
--- Tries to solve the board
+-- Attempts to solve the board
 solve :: Board -> Writer [String] Board
 solve board = do
   tell ["Initial board: ", showBoard board]
@@ -39,17 +39,19 @@ solveLoop board candidates numIterations = do
   tell ["Iteration: " ++ show numIterations]
   tell ["Found numbers sole: ", show newNumbersSole]
   tell ["Found numbers unique: ", show newNumbersUnique]
-  tell ["Updated board: ", showBoard updatedBoard]
-  tell ["Updated candidates: ", showCandidates updatedCandidates]
-  if numKnown updatedBoard == 81 -- TODO untangle
+  tell (if (length newNumbers) > 0 then ["Updated board: ", showBoard updatedBoard,
+                                         "Updated candidates: ", showCandidates updatedCandidates] else [])
+  if numKnown updatedBoard == 81
     then return updatedBoard
     else if (length newNumbers) >= 1
       then solveLoop updatedBoard updatedCandidates (numIterations + 1)
       else do
         let (removableCandidates, logs) = runWriter (lookForRemovableCandidates candidates)
+        let updatedCandidates = removeCandidates removableCandidates candidates
         tell logs
+        tell (if (length removableCandidates) > 0 then ["Updated candidates: ", showCandidates updatedCandidates] else [])
         if (length removableCandidates) >= 1
-          then solveLoop board (removeCandidates removableCandidates candidates) (numIterations + 1)
+          then solveLoop board updatedCandidates (numIterations + 1)
         else return board
   where
     newNumbersSole = searchSoleCandidates candidates
@@ -67,16 +69,13 @@ searchSoleCandidates candidates = [(intSetHead (getElem i j candidates), (i, j))
 
 -- Looks for cells for which there is a candidate unique in its row, column or square
 searchUniqueCandidates :: Candidates -> [(Int, Position)]
-searchUniqueCandidates candidates = nub (uniqueCandidates rowsPos
-  ++ uniqueCandidates columnsPos
-  ++ uniqueCandidates squaresPos)
+searchUniqueCandidates candidates = nub $ uniqueCandidates blocks
   where
-    uniqueCandidates blocks = concat $ map (lookForUniqueCandidates . joinCandidates candidates) blocks
+    blocks = rowsPos ++ columnsPos ++ squaresPos
+    uniqueCandidates blocks = concatMap (uniqueByNum . joinCandidates candidates) blocks
+    uniqueByNum = filterUniqueEqBy fst
 
-lookForUniqueCandidates :: [(Int, Position)] -> [(Int, Position)]
-lookForUniqueCandidates candidates = uniqueByNum candidates
-  where uniqueByNum = filterUniqueEqBy fst
-
+-- Looks whether any candidates can be eliminated by applying various techniques
 lookForRemovableCandidates :: Candidates -> Writer [String] [(Int, Position)]
 lookForRemovableCandidates candidates = do
   tell ["Looking if candidates can be eliminated..."]

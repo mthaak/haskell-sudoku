@@ -9,6 +9,7 @@ main = do
   board <- loadBoard
   let (finalBoard, logs) =  runWriter (solve board)
   mapM_ putStrLn logs
+  putStrLn (replicate 120 '-')
   putStrLn "Final board: "
   putStrLn (showBoard finalBoard)
 

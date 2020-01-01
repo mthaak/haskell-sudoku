@@ -3,7 +3,6 @@ module Utils
   , removeLineEndings
   , filterUniqueEqBy
   , mapElemMatrix
-  , mapElemVector
   , boolToInt
   , tuplify3
   , intSetPowerset
@@ -44,13 +43,6 @@ mapElemMatrix f (i, j) matrix = setElem new (i, j) matrix
     new = f old
     old = getElem i j matrix
 
--- Maps a single element, given by its index, in a vector using the supplied function
-mapElemVector :: (x -> x) -> Int -> Vector x -> Vector x
-mapElemVector f i vector = vector // [(i, new)]
-  where
-    new = f old
-    old = vector ! i
-
 -- Converts a bool to an integer
 boolToInt :: Bool -> Int
 boolToInt True  = 1
@@ -73,10 +65,11 @@ setOfIntToIntSet :: Set Int -> IntSet
 setOfIntToIntSet = IntSet.fromList . Set.toList
 
 -- Returns all subsets with given size
+-- TODO could be optimised
 subsetsOfSize :: Int -> IntSet -> [IntSet]
-subsetsOfSize n intSet =  filter ((n ==) . IntSet.size) (intSetPowerset intSet) -- TODO could be optimised
+subsetsOfSize n intSet =  filter ((n ==) . IntSet.size) (intSetPowerset intSet)
 
--- Returns all possible splits of two non-overlapping parts
+-- Returns all possible unique splits of two exclusive parts (without empty parts)
 splits :: Ord a => Set a -> [(Set a, Set a)]
 splits set = nub [(x, Set.difference set x) | x <- Set.toList (Set.powerSet set), x /= Set.empty, x /= set]
 

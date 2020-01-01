@@ -6,8 +6,8 @@ module Solve
   , squareColumnInteractions
   , squareSquareInteractionsRow
   , squareSquareInteractionsColumn
-  , eliminateCandidatesByNakedSubsets
-  , eliminateCandidatesByHiddenSubsets
+  , nakedSubsets
+  , hiddenSubsets
   ) where
 import           Board
 import           Candidates
@@ -84,6 +84,7 @@ lookForRemovableCandidates candidates = do
   tell [msg]
   return removable
 
+-- Runs the eliminators in sequence until one function returns at least one candidate that can be removed
 runCandidateEliminators :: [(String, Candidates -> [(Int, Position)])] -> Candidates -> (String, [(Int, Position)])
 runCandidateEliminators [] _ = ("Could not eliminate any candidates", [])
 runCandidateEliminators ((name, eliminator):other) candidates
@@ -91,97 +92,109 @@ runCandidateEliminators ((name, eliminator):other) candidates
   | otherwise = runCandidateEliminators other candidates
  where removable = eliminator candidates
 
--- TODO rename functions to eliminators?
+-- Functions and their names for eliminating candidates
 candidateEliminators :: [(String, Candidates -> [(Int, Position)])]
 candidateEliminators = [
-    ("squareRowInteractions", squareRowInteractions)
-  , ("squareColumnInteractions", squareColumnInteractions)
-  , ("squareSquareInteractionsRow", squareSquareInteractionsRow)
-  , ("squareSquareInteractionsColumn", squareSquareInteractionsColumn)
-  , ("eliminateCandidatesByNakedSubsets", eliminateCandidatesByNakedSubsets)
-  , ("eliminateCandidatesByHiddenSubsets", eliminateCandidatesByHiddenSubsets)
+      ("squareRowInteractions", squareRowInteractions)
+    , ("squareColumnInteractions", squareColumnInteractions)
+    , ("squareSquareInteractionsRow", squareSquareInteractionsRow)
+    , ("squareSquareInteractionsColumn", squareSquareInteractionsColumn)
+    , ("nakedSubsets", nakedSubsets)
+    , ("hiddenSubsets", hiddenSubsets)
   ]
 
--- TODO make more similar to squareSquareInteractions
+-- Invokes function over all sets of 3 squares (aligned horizontally or vertically) and all 9 possible numbers
+-- and concatenates the results
+concatMapOver3SquaresAndNumbers :: (([(Int, Position)], [(Int, Position)], [(Int, Position)]) -> Int -> [(Int, Position)])
+  -> Candidates -> [(Int, Position)]
+concatMapOver3SquaresAndNumbers per3squaresAndNum candidates = nub iterateSquares
+  where
+    squareNumbers = concatMap List.permutations [[1,2,3], [4,5,6], [7,8,9], [1,4,7], [2,5,8], [3,6,9]]
+    squares = map (map (\i -> squaresPos !! (i - 1))) squareNumbers
+    squaresWithCandidates = map (map (joinCandidates candidates)) squares
+    iterateSquares = concatMap iterateNumbers squaresWithCandidates
+    iterateNumbers [sq1,sq2,sq3] = concatMap (\num -> per3squaresAndNum (filterByNum num sq1,
+                                                                         filterByNum num sq2,
+                                                                         filterByNum num sq3) num) [1..9]
+    filterByNum num = filter ((num ==) . fst)
+
+-- ############# ELIMINATE CANDIDATES BY SQUARE-ROW/COL INTERACTIONS ##########
+
 -- Looks for candidates that can be eliminated due to square-row interactions
 squareRowInteractions :: Candidates -> [(Int, Position)]
-squareRowInteractions candidates = filter (candidateIsPresent candidates) $
-  concatMap (concatMap toRemovableCandidates . filter inSameRow . groupByNum . joinCandidates candidates) squaresPos
+squareRowInteractions candidates = concatMapOver3SquaresAndNumbers squareRowInteraction candidates
+
+-- A single square-row interaction for 3 aligned squares and one number
+squareRowInteraction :: ([(Int, Position)], [(Int, Position)], [(Int, Position)]) -> Int -> [(Int, Position)]
+squareRowInteraction (sq1, sq2, sq3) num
+  | length uniqueRowsSq1 == 1 = removable
+  | otherwise = []
   where
-    groupByNum = groupBy (\a b -> (fst a) == (fst b)) . sortBy (comparing fst)
-    inSameRow ls = length (nub $ map xRow ls) == 1
-    toRemovableCandidates ls =
-      let
-          number = head (map fst ls)
-          row = head (map xRow ls)
-          minPos = minimum (map snd ls)
-          filterNotInThisSquare = filter (\(num, pos) -> not (inSameSquare minPos pos))
-      in filterNotInThisSquare [(number, (row, c)) | c <- [1..9]]
+    uniqueRowsSq1 = (nub . map xRow) sq1
+    removable = filter (\(num, (r, c)) -> List.elem r uniqueRowsSq1) (sq2 ++ sq3)
 
 -- Looks for candidates that can be eliminated due to square-column interactions
 squareColumnInteractions :: Candidates -> [(Int, Position)]
 squareColumnInteractions = swapRowsColumns . squareRowInteractions . Matrix.transpose
 
+-- ############# ELIMINATE CANDIDATES BY SQUARE-SQUARE INTERACTIONS ###########
+
 -- Looks for candidates that can be eliminated due to square-square interactions (row-wise)
 squareSquareInteractionsRow :: Candidates -> [(Int, Position)]
-squareSquareInteractionsRow candidates = nub $ concatMap per3squares squares
-  where
-    squareNums = concatMap List.permutations [[1,2,3], [4,5,6], [7,8,9],
-      [1,4,7], [2,5,8], [3,6,9]]
-    squares = map (map (\i -> squaresPos !! (i - 1))) squareNums
-    per3squares = squareSquareInteractionsFor3Squares . tuplify3 . map (joinCandidates candidates)
+squareSquareInteractionsRow candidates = concatMapOver3SquaresAndNumbers squareSquareInteraction candidates
 
-squareSquareInteractionsFor3Squares :: ([(Int, Position)], [(Int, Position)], [(Int, Position)]) -> [(Int, Position)]
-squareSquareInteractionsFor3Squares (sq1, sq2, sq3) = concatMap f [1..9]
-  where
-    f num = squareSquareInteractionsForNum num (filterByNum num sq1) (filterByNum num sq2) (filterByNum num sq3)
-    filterByNum num = filter ((num ==) . fst)
-
-squareSquareInteractionsForNum :: Int -> [(Int, Position)] -> [(Int, Position)] -> [(Int, Position)] -> [(Int, Position)]
-squareSquareInteractionsForNum num sq1 sq2 sq3
+-- A single square-square interaction (row-wise) for 3 aligned squares and one number
+squareSquareInteraction :: ([(Int, Position)], [(Int, Position)], [(Int, Position)]) -> Int -> [(Int, Position)]
+squareSquareInteraction (sq1, sq2, sq3) num
   | length (uniqueRows sq1) == 2 &&
     uniqueRows sq1 == uniqueRows sq2 &&
-    uniqueRows sq1 /= uniqueRows sq3 = sq3removable
+    uniqueRows sq1 /= uniqueRows sq3 = removable
   | otherwise = []
   where
     uniqueRows = nub . map xRow
-    sq3removable = filter (\(num, (r, c)) -> List.elem r (uniqueRows sq1)) sq3
+    removable = filter (\(num, (r, c)) -> List.elem r (uniqueRows sq1)) sq3
 
 -- Looks for candidates that can be eliminated due to square-square interactions (column-wise)
 squareSquareInteractionsColumn :: Candidates -> [(Int, Position)]
 squareSquareInteractionsColumn = swapRowsColumns . squareSquareInteractionsRow . Matrix.transpose
 
-eliminateCandidatesByNakedSubsets :: Candidates -> [(Int, Position)]
-eliminateCandidatesByNakedSubsets candidates = concatMap eliminateCandidatesByNakedSubsetsForBlock blocksWithCandidates
+-- #################### ELIMINATE CANDIDATES BY NAKED SUBSETS #################
+
+-- Looks for candidates that can be eliminated due to naked subsets
+nakedSubsets :: Candidates -> [(Int, Position)]
+nakedSubsets candidates = concatMap nakedSubsetsForBlock blocksWithCandidates
   where
     blocks = rowsPos ++ columnsPos ++ squaresPos
     blocksWithCandidates = map (joinCandidateSets candidates) blocks
 
-eliminateCandidatesByNakedSubsetsForBlock :: [(IntSet, Position)] -> [(Int, Position)]
-eliminateCandidatesByNakedSubsetsForBlock block = concatMap (removable block) commonSubsets
+nakedSubsetsForBlock :: [(IntSet, Position)] -> [(Int, Position)]
+nakedSubsetsForBlock block = concatMap removable commonSubsets
   where
     commonSubsets = (map extractSubset . filterGroup . groupBySubset) block
     groupBySubset = groupBy (\a b -> (fst a) == (fst b)) . sortBy (comparing fst)
     filterGroup = filter (\grp -> length grp == IntSet.size (extractSubset grp))
     extractSubset = (fst . head)
-    removable block subset = concatMap (\(numSet, pos) ->
+    removable subset = concatMap (\(numSet, pos) ->
         if numSet == subset
           then []
           else flatten [(IntSet.intersection numSet subset, pos)]
       ) block
 
-eliminateCandidatesByHiddenSubsets :: Candidates -> [(Int, Position)]
-eliminateCandidatesByHiddenSubsets candidates = nub $ concatMap f blocks
+-- #################### ELIMINATE CANDIDATES BY HIDDEN SUBSETS ################
+
+-- Looks for candidates that can be eliminated due to hidden subsets
+hiddenSubsets :: Candidates -> [(Int, Position)]
+hiddenSubsets candidates = nub $ concatMap f blocks
   where
     blocks = rowsPos ++ columnsPos ++ squaresPos
     f block = concatMap (uncurry (g block)) (splitsMinSize 2 (Set.fromList [1..9]))
     g block a b = h (toPos block (Set.toList a)) (toPos block (Set.toList b))
     toPos block indices = map (\i -> block !! (i - 1)) indices
-    h a b = eliminateCandidatesByHiddenSubsetsInclExcl (getCandidates candidates a)
-                                                       (getCandidates candidates b)
+    h a b = hiddenSubsetsForInclExcl (getCandidates candidates a)
+                                                          (getCandidates candidates b)
 
-eliminateCandidatesByHiddenSubsetsInclExcl :: [(IntSet, Position)] -> [(IntSet, Position)] -> [(Int, Position)]
-eliminateCandidatesByHiddenSubsetsInclExcl cellsIncl cellsExcl
+hiddenSubsetsForInclExcl :: [(IntSet, Position)] -> [(IntSet, Position)] -> [(Int, Position)]
+hiddenSubsetsForInclExcl cellsIncl cellsExcl
   | (length uniqueSubsets) > 0 = removable
   | otherwise = []
   where

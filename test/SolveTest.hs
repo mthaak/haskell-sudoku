@@ -6,7 +6,7 @@ import           Board (readBoard)
 import           Candidates (createCandidates)
 import           Solve
 import           TestUtils (isValidSolvedSudoku)
-import Control.Monad.Writer (runWriter)
+import           Control.Monad.Writer (runWriter)
 import           Test.HUnit
 import           Data.IntSet as IntSet
 
@@ -14,7 +14,7 @@ testSearchSoleCandidates :: Test
 testSearchSoleCandidates =
   TestCase
     (assertEqual
-      "for createCandidates ..."
+      ("for candidates: \n" ++ (show candidates))
       [(5, (5, 5))]
       (searchSoleCandidates candidates))
   where
@@ -26,7 +26,7 @@ testSearchUniqueCandidates :: Test
 testSearchUniqueCandidates =
   TestCase
     (assertEqual
-      "for createCandidates ..."
+      ("for candidates: \n" ++ (show candidates))
       [(5, (5, 5))]
       (searchUniqueCandidates candidates))
   where
@@ -40,7 +40,7 @@ testSquareRowInteractions :: Test
 testSquareRowInteractions =
   TestCase
     (assertEqual
-      "for createCandidates ..."
+      ("for candidates: \n" ++ (show candidates))
       [(7, (5, 2))]
       (squareRowInteractions candidates))
   where
@@ -54,7 +54,7 @@ testSquareColumnInteractions :: Test
 testSquareColumnInteractions =
   TestCase
     (assertEqual
-      "for createCandidates ..."
+      ("for candidates: \n" ++ (show candidates))
       [(7, (2, 5))]
       (squareColumnInteractions candidates))
   where
@@ -68,7 +68,7 @@ testSquareSquareInteractionsRow :: Test
 testSquareSquareInteractionsRow =
   TestCase
     (assertEqual
-      "for createCandidates ..."
+      ("for candidates: \n" ++ (show candidates))
       [(8, (4, 8))]
       (squareSquareInteractionsRow candidates))
   where
@@ -88,7 +88,7 @@ testSquareSquareInteractionsColumn :: Test
 testSquareSquareInteractionsColumn =
   TestCase
     (assertEqual
-      "for createCandidates ..."
+      ("for candidates: \n" ++ (show candidates))
       [(8, (8, 4))]
       (squareSquareInteractionsColumn candidates))
   where
@@ -104,13 +104,13 @@ testSquareSquareInteractionsColumn =
       , (IntSet.fromList [8], (8, 4))
       , (IntSet.fromList [8], (8, 5))]
 
-testEliminateCandidatesByNakedSubsets :: Test
-testEliminateCandidatesByNakedSubsets =
+testByNakedSubsets :: Test
+testByNakedSubsets =
   TestCase
     (assertEqual
-      "for createCandidates ..."
+      ("for candidates: \n" ++ (show candidates))
       [(4, (2, 1)), (7, (2, 1)), (7, (4, 1)), (4, (6, 1))]
-      (eliminateCandidatesByNakedSubsets candidates))
+      (nakedSubsets candidates))
   where
     candidates = createCandidates [
         (IntSet.fromList [4, 7], (1, 1))
@@ -119,13 +119,13 @@ testEliminateCandidatesByNakedSubsets =
       , (IntSet.fromList [4, 7], (5, 1))
       , (IntSet.fromList [2, 4], (6, 1))]
 
-testEliminateCandidatesByHiddenSubsets :: Test
-testEliminateCandidatesByHiddenSubsets =
+testByHiddenSubsets :: Test
+testByHiddenSubsets =
   TestCase
     (assertEqual
-      "for createCandidates ..."
+      ("for candidates: \n" ++ (show candidates))
       [(2, (5, 1)), (3, (5, 1)), (5, (5, 1)), (2, (6, 1)), (3, (6, 1)), (5, (6, 1))]
-      (eliminateCandidatesByHiddenSubsets candidates))
+      (hiddenSubsets candidates))
   where
     candidates = createCandidates [
         (IntSet.fromList [2, 3], (4, 1))
@@ -135,17 +135,26 @@ testEliminateCandidatesByHiddenSubsets =
       , (IntSet.fromList [2, 3, 5], (8, 1))
       , (IntSet.fromList [2, 3, 9], (9, 1))]
 
-
 testSolveEasy :: Test
 testSolveEasy =
   TestCase ( do
-    initialBoard <- fmap readBoard (readFile "data/board.txt")
+    initialBoard <- fmap readBoard (readFile "data/board_easy.txt")
     let (finalBoard, logs) =  runWriter (solve initialBoard)
-    solution <- fmap readBoard (readFile "data/solution.txt")
+    solution <- fmap readBoard (readFile "data/solution_easy.txt")
     (assertEqual
-      "for (solve '/data/board.txt'),"
+      ("for board: \n" ++ (show initialBoard))
       solution
       finalBoard))
+
+testSolveMedium :: Test
+testSolveMedium =
+  TestCase ( do
+    initialBoard <- fmap readBoard (readFile "data/board_medium.txt")
+    let (finalBoard, logs) =  runWriter (solve initialBoard)
+    (assertEqual
+      ("for board: \n" ++ (show initialBoard))
+      True
+      (isValidSolvedSudoku finalBoard)))
 
 testSolveHard :: Test
 testSolveHard =
@@ -153,7 +162,7 @@ testSolveHard =
     initialBoard <- fmap readBoard (readFile "data/board_hard.txt")
     let (finalBoard, logs) =  runWriter (solve initialBoard)
     (assertEqual
-      "for (solve '/data/board_hard.txt'),"
+      ("for board: \n" ++ (show initialBoard))
       True
       (isValidSolvedSudoku finalBoard)))
 
@@ -166,9 +175,10 @@ solveTests = TestLabel "SolveTest"
     , TestLabel "testSquareColumnInteractions" testSquareColumnInteractions
     , TestLabel "testSquareSquareInteractionsRow" testSquareSquareInteractionsRow
     , TestLabel "testSquareSquareInteractionsColumn" testSquareSquareInteractionsColumn
-    , TestLabel "testEliminateCandidatesByNakedSubsets" testEliminateCandidatesByNakedSubsets
-    , TestLabel "testEliminateCandidatesByHiddenSubsets" testEliminateCandidatesByHiddenSubsets
+    , TestLabel "testByNakedSubsets" testByNakedSubsets
+    , TestLabel "testByHiddenSubsets" testByHiddenSubsets
     , TestLabel "testSolveEasy" testSolveEasy
+    , TestLabel "testSolveMedium" testSolveMedium
     , TestLabel "testSolveHard" testSolveHard
     ]
   )

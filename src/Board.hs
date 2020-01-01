@@ -24,22 +24,22 @@ import           qualified Data.Matrix as Matrix
 -- 9x9 matrix of numbers
 type Board = Matrix Int
 
--- Row and column indices (0-8)
+-- Position of a cell by (row, column) indices (0-8)
 type Position = (Int, Int)
 
 -- Number of known numbers on the board
 numKnown :: Board -> Int
 numKnown = length . filter (/= 0) . Matrix.toList
 
--- Returns the known numbers with their positions
+-- The known numbers with their positions
 knownPos :: Board -> [(Int, Position)]
-knownPos = filter ((0 /=) . fst) . Matrix.toList . Matrix.mapPos (\(r,c) x -> (x, (r, c)))
+knownPos = filter ((0 /=) . fst) . Matrix.toList . Matrix.mapPos (\(r, c) x -> (x, (r, c)))
 
 -- Updates the board with newly found numbers
 updateBoard :: [(Int, Position)] -> Board -> Board
 updateBoard newNumbers board = foldl f board newNumbers
   where
-    f board_ (x, pos) = updateCell x pos board_
+    f board (x, pos) = updateCell x pos board
 
 -- Sets number at position on the board
 updateCell :: Int -> Position -> Board -> Board
@@ -64,18 +64,18 @@ inSameSquare (r1, c1) (r2, c2) = floor3 r1 == floor3 r2 && floor3 c1 == floor3 c
 
 -- Neighbours in same row
 rowNeighbours :: Position -> [Position]
-rowNeighbours (i, j) = [(i, c) | c <- [1 .. 9], c /= j]
+rowNeighbours (r, c) = [(r, c1) | c1 <- [1 .. 9], c1 /= c]
 
 -- Neighbours in same column
 columnNeighbours :: Position -> [Position]
-columnNeighbours (i, j) = [(r, j) | r <- [1 .. 9], r /= i]
+columnNeighbours (r, c) = [(r1, c) | r1 <- [1 .. 9], r1 /= r]
 
 -- Neighbours in same square
 squareNeighbours :: Position -> [Position]
-squareNeighbours (i, j) = [(r, c) | r <- [rs .. rs + 2], c <- [cs .. cs + 2], (r, c) /= (i, j)]
+squareNeighbours (r, c) = [(r1, c1) | r1 <- [rs .. rs + 2], c1 <- [cs .. cs + 2], (r1, c1) /= (r, c)]
   where
-    rs = ((i - 1) `div` 3) * 3 + 1
-    cs = ((j - 1) `div` 3) * 3 + 1
+    rs = ((r - 1) `div` 3) * 3 + 1
+    cs = ((c - 1) `div` 3) * 3 + 1
 
 -- Row, column and square neighbours
 getNeighbours :: Position -> [Position]
@@ -93,5 +93,6 @@ toDigit :: Int -> Char
 toDigit 0 = '.'
 toDigit x = intToDigit x
 
+-- Show board as a pretty matrix
 showBoard :: Board -> String
 showBoard = Matrix.prettyMatrix
